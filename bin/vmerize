@@ -1,0 +1,50 @@
+#!/usr/bin/env ruby
+
+require 'rubygems'
+require 'highline/import'
+require 'net/ssh'
+require 'gli'
+require 'vmerize'
+
+include GLI
+
+program_desc 'Run your local Chef recipes against a remote machine. Quickly.'
+
+version Vmerize::VERSION
+
+USER = ENV['USER'] || `whoami`
+
+def execute_command(host, command)
+  Net::SSH.start(host, USER.strip) do |ssh|
+    ssh.open_channel do |channel|
+      channel.request_pty
+      channel.exec command
+      channel.on_data do |ch, data|
+        if data =~ /\[sudo\]/
+          password = ask("Enter your password:  ") { |q| q.echo = "x" }
+          channel.send_data(password + "\n")
+        end
+        puts data
+      end
+    end
+  end
+end
+
+desc 'Install the pre-requisites for running Chef'
+command :bootstrap do |c|
+  c.action do |global_options, options, args|
+    raise "Must supply host" unless args.size == 1
+    execute_command(args.first, "sudo apt-get update; sudo apt-get install rsync ruby ruby-dev libopenssl-ruby libshadow-ruby1.8 rubygems -y; sudo gem install chef --no-ri --no-rdoc")
+  end
+end
+
+desc 'Sync and then run the Chef cookbooks'
+command :converge do |c|
+  c.action do |global_options, options, args|
+    raise "Must supply host" unless args.size == 1
+    `rsync --delete -r config cookbooks roles #{USER.strip}@#{args.first}:/tmp`
+    execute_command(args.first, "sudo /var/lib/gems/1.8/bin/chef-solo -c /tmp/config/solo.rb -j /tmp/config/vmerize.json")
+  end
+end
+
+exit GLI.run(ARGV)
