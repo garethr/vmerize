@@ -21,7 +21,7 @@ activities, rather than production servers, and to be short lived. But I still
 want my shell configiration and common tools installed.
 
 This isn't designed as a replacement for knife or for running a proper Chef
-server setup. Please don't use this because you find the server _complcated_.
+server setup. Please don't use this because you find the server _complicated_.
 
 Here's how to use it:
 
