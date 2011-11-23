@@ -1,0 +1,34 @@
+This is currently a highly opinionated way of applying Chef recipes against a
+remote machine. It does the following:
+
+* Installs a Ruby environment and the latest version of Chef
+* Copies a set of files to the remote host
+* Runs chef-solo with a prefined configuration
+
+It has several limitations:
+
+* It probably only works with Ubuntu 10.04
+* It requires passwordless ssh access to the remote machine
+* It requires an account with sudo access (if needed will prompt for a password)
+* It needs rsync installed locally
+* It only works with Chef
+
+Some of these I might fix one day.
+
+My workflow involves frequently starting new virtual machines of different
+types (Rackspace, VMWare, EC2). These tend to be for general development
+activities, rather than production servers, and to be short lived. But I still
+want my shell configiration and common tools installed.
+
+This isn't designed as a replacement for knife or for running a proper Chef
+server setup. Please don't use this because you find the server _complcated_.
+
+Here's how to use it:
+
+    > vmerize bootstrap host.example.com
+
+    > ls
+    cookbooks roles configs
+    > ls configs
+    solo.rb vmerize.json
+    > vmerize converge host.example.com
